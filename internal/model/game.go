@@ -20,3 +20,9 @@ type GameResult struct {
 	MatchedNumbers Numbers      `bson:"matched_numbers"`
 	EvaluatedAt    time.Time    `bson:"evaluated_at"`
 }
+
+type GamesNow struct {
+	Fixed     Game `json:"fixo"`
+	Frequency Game `json:"frequente"`
+	Random    Game `json:"aleátorio"`
+}
