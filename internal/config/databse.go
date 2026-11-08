@@ -16,6 +16,7 @@ import (
 type Collection struct {
 	Contests          *mongo.Collection
 	Gamers            *mongo.Collection
+	NumberFrequency   *mongo.Collection
 	FrequencyAnalyses *mongo.Collection
 	GameResults       *mongo.Collection
 	AppSettings       *mongo.Collection
@@ -49,6 +50,7 @@ func NewConnectMongo(env *Env) *Collection {
 	c := Collection{
 		Contests:          collection.Collection(env.MONGO_COLLECTION_CONTESTS),
 		Gamers:            collection.Collection(env.MONGO_COLLECTION_GAMERS),
+		NumberFrequency:   collection.Collection(env.MONGO_COLLECTION_NUMBER_FREQUENCY),
 		FrequencyAnalyses: collection.Collection(env.MONGO_COLLECTION_FREQUENCY_ANALYSES),
 		GameResults:       collection.Collection(env.MONGO_COLLECTION_GAME_RESULTS),
 		AppSettings:       collection.Collection(env.MONGO_COLLECTION_APP_SETTINGS),
@@ -74,6 +76,27 @@ func NewConnectMongo(env *Env) *Collection {
 		}
 
 		fmt.Println("✅ Seus números da sorte são: ", s)
+	}
+
+	count, err = c.NumberFrequency.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Println("❌ Erro ao verificar a coleção NumberFrequency:", err)
+	}
+
+	if count == 0 {
+		log.Println("ℹ️ Criando lista do números mais sorteados. Salvando dados iniciais...")
+		for i := range 25 {
+			f := model.NumberFrequency{
+				ID:     fmt.Sprintf("%d", i+1),
+				Number: i + 1,
+				Count:  0,
+			}
+			if _, err := c.NumberFrequency.InsertOne(ctx, f); err != nil {
+				log.Fatal("❌ Erro ao salvar dados iniciais em NumberFrequency:", err)
+			}
+		}
+
+		fmt.Println("✅ Números frquentes salvos com suceso: ")
 	}
 
 	return &c
