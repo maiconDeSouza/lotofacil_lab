@@ -1,11 +1,15 @@
-package config
+package database
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"sync"
 	"time"
 
+	"github.com/maiconDeSouza/lotofacil_lab/internal/config/env"
+	"github.com/maiconDeSouza/lotofacil_lab/internal/lottery"
 	"github.com/maiconDeSouza/lotofacil_lab/internal/model"
 	"github.com/maiconDeSouza/lotofacil_lab/pkg/random"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,12 +26,11 @@ type Collection struct {
 	AppSettings       *mongo.Collection
 }
 
-func NewConnectMongo(env *Env) *Collection {
+func NewConnectMongo(env *env.Env) *Collection {
 	uri := fmt.Sprintf(
-		"mongodb://%s:%s@localhost:%s/",
+		"mongodb+srv://%s:%s@cluster0.xhbyyve.mongodb.net/",
 		env.MONGO_ROOT_USER,
 		env.MONGO_ROOT_PASSWORD,
-		env.MONGO_PORT,
 	)
 	clientOptions := options.Client().ApplyURI(uri)
 
@@ -99,5 +102,47 @@ func NewConnectMongo(env *Env) *Collection {
 		fmt.Println("✅ Números frquentes salvos com suceso: ")
 	}
 
+	count, err = c.Contests.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Println("❌ Erro ao verificar a coleção Contests:", err)
+	}
+
+	if count == 0 {
+		log.Println("ℹ️ Pegando os últimos 30 jogos. Salvando dados iniciais...")
+
+		contests, status := lottery.GetLastContest()
+		if status != http.StatusOK {
+			log.Print("❌ A API retornou um status inesperado: ", status)
+		}
+
+		get(contests, env, &c, ctx)
+	}
+
 	return &c
+}
+
+func get(n int, env *env.Env, c *Collection, ctx context.Context) {
+	wg := sync.WaitGroup{}
+
+	semaphore := make(chan struct{}, 5)
+
+	for i := n - 9; i <= n; i++ {
+		semaphore <- struct{}{}
+
+		idx := i
+
+		wg.Go(func() {
+			defer func() { <-semaphore }()
+
+			r, status := lottery.GetContest(idx, env)
+			if status != http.StatusOK {
+				log.Print("❌ A API retornou um status inesperado: ", status)
+			}
+			if _, err := c.Contests.InsertOne(ctx, r); err != nil {
+				log.Fatal("❌ Erro no Contests:", err)
+			}
+		})
+	}
+
+	wg.Wait()
 }

@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/maiconDeSouza/lotofacil_lab/internal/config"
+	"github.com/maiconDeSouza/lotofacil_lab/internal/config/env"
 )
 
-func InitServer(env *config.Env) *http.ServeMux {
+func InitServer(env *env.Env) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	port := fmt.Sprintf("%s", env.SERVER_PORT)
