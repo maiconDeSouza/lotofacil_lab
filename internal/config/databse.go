@@ -6,6 +6,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/maiconDeSouza/lotofacil_lab/internal/model"
+	"github.com/maiconDeSouza/lotofacil_lab/pkg/random"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -49,6 +52,28 @@ func NewConnectMongo(env *Env) *Collection {
 		FrequencyAnalyses: collection.Collection(env.MONGO_COLLECTION_FREQUENCY_ANALYSES),
 		GameResults:       collection.Collection(env.MONGO_COLLECTION_GAME_RESULTS),
 		AppSettings:       collection.Collection(env.MONGO_COLLECTION_APP_SETTINGS),
+	}
+
+	count, err := c.AppSettings.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Println("❌ Erro ao verificar a coleção AppSettings:", err)
+	}
+
+	if count == 0 {
+		log.Println("ℹ️ Criando seu jogo fixo. Salvando dados iniciais...")
+
+		s := random.GenerateLotofacilNumbers15()
+		f := model.AppSettings{
+			ID:        env.Lottery.Name,
+			FixedGame: s,
+			CreatedAt: time.Now(),
+		}
+
+		if _, err := c.AppSettings.InsertOne(ctx, f); err != nil {
+			log.Fatal("❌ Erro ao salvar dados iniciais em AppSettings:", err)
+		}
+
+		fmt.Println("✅ Seus números da sorte são: ", s)
 	}
 
 	return &c
