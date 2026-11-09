@@ -16,6 +16,7 @@ type ContestRepositoryInterface interface {
 	FindContest(contestNumber int, contest *model.Contest) error
 	LastContest(lastContest *model.Contest) error
 	CreateContest(contest *model.Contest) error
+	FindAllContest(contests []*model.Contest) error
 }
 
 type ContestRepository struct {
@@ -26,6 +27,23 @@ func NewContestRepository(contest *mongo.Collection) *ContestRepository {
 	return &ContestRepository{
 		collection: contest,
 	}
+}
+
+func (r *ContestRepository) FindAllContest(contests []*model.Contest) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
+	defer cancel()
+
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	if err := cursor.All(ctx, &contests); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *ContestRepository) FindContest(contestNumber int, contest *model.Contest) error {

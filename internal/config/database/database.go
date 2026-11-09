@@ -126,7 +126,7 @@ func get(n int, env *env.Env, c *Collection, ctx context.Context) {
 
 	semaphore := make(chan struct{}, 5)
 
-	for i := n - 9; i <= n; i++ {
+	for i := n - 29; i <= n; i++ {
 		semaphore <- struct{}{}
 
 		idx := i

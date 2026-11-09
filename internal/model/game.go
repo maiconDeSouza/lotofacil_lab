@@ -3,12 +3,10 @@ package model
 import "time"
 
 type Game struct {
-	ID            string       `bson:"_id,omitempty"`
-	ContestNumber string       `bson:"contest_number"`
+	ContestNumber int          `bson:"contest_number"`
 	Strategy      StrategyType `bson:"strategy"`
 	Numbers       Numbers      `bson:"numbers"`
 	GeneratedAt   time.Time    `bson:"generated_at"`
-	Hits          *int         `bson:"hits,omitempty"`
 	Status        ResultStatus `bson:"status"`
 }
 
