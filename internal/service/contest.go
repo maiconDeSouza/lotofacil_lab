@@ -9,9 +9,11 @@ import (
 	"github.com/maiconDeSouza/lotofacil_lab/internal/lottery"
 	"github.com/maiconDeSouza/lotofacil_lab/internal/model"
 	"github.com/maiconDeSouza/lotofacil_lab/internal/repository"
+	"github.com/maiconDeSouza/lotofacil_lab/pkg/random"
 )
 
 type ContestServiceInterface interface {
+	Start() (*model.GamesNow, error)
 }
 
 type ContestService struct {
@@ -23,16 +25,16 @@ type ContestService struct {
 }
 
 func NewContestService(
-	repoContest *repository.ContestRepositoryInterface,
-	repoAppSetting *repository.AppSettingsRepositoryInterface,
-	repoGame *repository.GameRepositoryInterface,
+	repoContest repository.ContestRepositoryInterface,
+	repoAppSetting repository.AppSettingsRepositoryInterface,
+	repoGame repository.GameRepositoryInterface,
 	repoNumberFrequency repository.NumberFrequencyInterface,
 	env *env.Env,
 ) *ContestService {
 	return &ContestService{
-		repoContest:         *repoContest,
-		repoAppSetting:      *repoAppSetting,
-		repoGame:            *repoGame,
+		repoContest:         repoContest,
+		repoAppSetting:      repoAppSetting,
+		repoGame:            repoGame,
 		repoNumberFrequency: repoNumberFrequency,
 		env:                 env,
 	}
@@ -73,7 +75,7 @@ func (s *ContestService) Start() (*model.GamesNow, error) {
 	}
 
 	var contests []*model.Contest
-	if err := s.repoContest.FindAllContest(contests); err != nil {
+	if err := s.repoContest.FindAllContest(&contests); err != nil {
 		return nil, err
 	}
 
@@ -91,7 +93,7 @@ func (s *ContestService) Start() (*model.GamesNow, error) {
 
 	var numbers []*model.NumberFrequency
 
-	if err := s.repoNumberFrequency.FindAllNumberFrequency(numbers); err != nil {
+	if err := s.repoNumberFrequency.FindAllNumberFrequency(&numbers); err != nil {
 		return nil, err
 	}
 
@@ -125,4 +127,34 @@ func (s *ContestService) Start() (*model.GamesNow, error) {
 		}
 		return 0
 	})
+
+	frequents, err := random.GenerateFrequent(&numbers)
+	if err != nil {
+		return nil, err
+	}
+
+	nf := model.Game{
+		ContestNumber: lastContest.Next,
+		Strategy:      model.StrategyFrequency,
+		Numbers:       frequents,
+		GeneratedAt:   time.Now(),
+		Status:        model.ResultWaiting,
+	}
+
+	nr := model.Game{
+		ContestNumber: lastContest.Next,
+		Strategy:      model.StrategyRandom,
+		Numbers:       random.GenerateLotofacilNumbers15(),
+		GeneratedAt:   time.Now(),
+		Status:        model.ResultWaiting,
+	}
+
+	gamersNow := model.GamesNow{
+		Fixed:           f,
+		Frequency:       nf,
+		Random:          nr,
+		NumberFrequency: numbers,
+	}
+
+	return &gamersNow, nil
 }

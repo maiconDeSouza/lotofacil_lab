@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Game struct {
 	ContestNumber int          `bson:"contest_number"`
@@ -20,7 +22,8 @@ type GameResult struct {
 }
 
 type GamesNow struct {
-	Fixed     Game `json:"fixo"`
-	Frequency Game `json:"frequente"`
-	Random    Game `json:"aleátorio"`
+	Fixed           Game               `json:"fixo"`
+	Frequency       Game               `json:"frequente"`
+	Random          Game               `json:"aleátorio"`
+	NumberFrequency []*NumberFrequency `json:"numberFrequency"`
 }

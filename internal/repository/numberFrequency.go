@@ -11,7 +11,7 @@ import (
 )
 
 type NumberFrequencyInterface interface {
-	FindAllNumberFrequency(numbers []*model.NumberFrequency) error
+	FindAllNumberFrequency(numbers *[]*model.NumberFrequency) error
 	UpdateNumberFrequency(n *model.NumberFrequency) error
 }
 
@@ -19,13 +19,13 @@ type NumberFrequencyRepository struct {
 	collection *mongo.Collection
 }
 
-func NewNumberFrequencyRepository(numberFrequency *mongo.Collection) *GameRepository {
-	return &GameRepository{
+func NewNumberFrequencyRepository(numberFrequency *mongo.Collection) *NumberFrequencyRepository {
+	return &NumberFrequencyRepository{
 		collection: numberFrequency,
 	}
 }
 
-func (r *NumberFrequencyRepository) FindAllNumberFrequency(numbers []*model.NumberFrequency) error {
+func (r *NumberFrequencyRepository) FindAllNumberFrequency(numbers *[]*model.NumberFrequency) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
 	defer cancel()
 

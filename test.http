@@ -1,0 +1,7 @@
+@base_url = http://127.0.0.1:1977
+
+
+### 1. Rota Teste
+GET {{base_url}}/start 
+Content-Type: application/json
+
